@@ -19,6 +19,10 @@ PHI_B_TARGET: float = 0.8145
 # residual is called "small" for the name-change null.
 RESIDUAL_SURVIVAL_THRESHOLD: float = 0.5
 
+# Uniform-on-circle mean absolute deviation from a point. Used when a
+# label class is too small to estimate a cluster. Finite; never inf.
+NULL_CIRCULAR_DISPERSION: float = 0.5 * float(np.pi)
+
 
 @dataclass(frozen=True)
 class LayerNames:
@@ -61,9 +65,10 @@ def geometric_residual(
 ) -> float:
     """Occupancy-weighted within-label circular dispersion of angles.
 
-    Classes with fewer than ``min_count`` points are ignored (a singleton
-    cannot claim a cluster). If no class qualifies, the residual is +inf:
-    the stamp does not predict geometry.
+    Classes with fewer than ``min_count`` points cannot claim a cluster.
+    They contribute :data:`NULL_CIRCULAR_DISPERSION` (π/2), the uniform-circle
+    null — a large finite number, not infinity. Paired or unique stamps
+    therefore report a large residual, not a discovery.
 
     Small ⇒ the stamp predicts geometry. Large ⇒ the stamp is a name.
     """
@@ -77,9 +82,8 @@ def geometric_residual(
         mask = labs == lab
         n = int(np.count_nonzero(mask))
         if n < min_count:
-            continue
-        parts.append(circular_dispersion(ang[mask]))
+            parts.append(NULL_CIRCULAR_DISPERSION)
+        else:
+            parts.append(circular_dispersion(ang[mask]))
         weights.append(float(n))
-    if not parts:
-        return float("inf")
     return float(np.average(parts, weights=weights))

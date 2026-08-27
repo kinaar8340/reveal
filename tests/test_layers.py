@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from reveal.layers import (
+    NULL_CIRCULAR_DISPERSION,
     LayerNames,
     circular_dispersion,
     geometric_residual,
@@ -32,10 +33,12 @@ def test_geometric_residual_small_for_angle_clusters():
     assert geometric_residual(labels, angles) < 0.1
 
 
-def test_geometric_residual_inf_when_no_class_qualifies():
+def test_geometric_residual_unique_labels_are_finite_null():
     angles = np.array([0.0, 1.0, 2.0])
     labels = np.array([0, 1, 2])
-    assert geometric_residual(labels, angles) == float("inf")
+    value = geometric_residual(labels, angles)
+    assert np.isfinite(value)
+    assert value == NULL_CIRCULAR_DISPERSION
 
 
 def test_circular_dispersion_zero_for_identical():

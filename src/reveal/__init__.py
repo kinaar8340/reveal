@@ -6,6 +6,7 @@ This package measures residuals. It does not name God.
 """
 
 from .layers import (
+    NULL_CIRCULAR_DISPERSION,
     PHI_B_TARGET,
     RESIDUAL_SURVIVAL_THRESHOLD,
     LayerNames,
@@ -15,6 +16,7 @@ from .layers import (
 __version__ = "0.1.0"
 
 __all__ = [
+    "NULL_CIRCULAR_DISPERSION",
     "PHI_B_TARGET",
     "RESIDUAL_SURVIVAL_THRESHOLD",
     "LayerNames",

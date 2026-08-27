@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
+
 from reveal.names import ALLOWED_MODULI, NAMES_CSV_FIELDS, run_names, write_names_csv
 
 
@@ -40,6 +42,16 @@ def test_paired_row_exists():
     assert len(paired) == 1
     assert paired[0].modulus == 37
     assert paired[0].lock_claimed is False
+    assert np.isfinite(paired[0].residual_R)
+    assert paired[0].residual_R > 0.5
+
+
+def test_every_residual_is_finite():
+    import math
+
+    rows = run_names(steps=48, n_permutations=8)
+    for row in rows:
+        assert math.isfinite(row.residual_R), row.method
 
 
 def test_no_extra_moduli():
@@ -57,3 +69,4 @@ def test_write_names_csv(tmp_path: Path):
     assert len(lines) == 6
     assert "CONTROL" not in text  # flag is boolean control, not a slogan in the CSV
     assert "angle_bin" in text
+    assert "inf" not in text.lower()
