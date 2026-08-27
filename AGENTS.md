@@ -7,6 +7,7 @@ This repo measures residuals. It does not name God.
 - W_g is the valve, not heading
 - leftover lock is the only allowed global_R claim
 - do not add moduli to chase a lock
+- do not add axes or seeds to beat the peloton residual
 - do not commit large videos
 
 Never treat angle_bin as discovery. Never print theology.

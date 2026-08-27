@@ -12,6 +12,7 @@ REQUIRED = [
     'modulus swap is a null for "is this just a name?"',
     "angle_bin is CONTROL",
     "do not add moduli to chase a lock",
+    "do not add axes or seeds to beat the peloton residual",
     "do not commit large videos",
     "α and Θ̄ are peloton, not global_R",
     "W_g is the valve, not heading",
