@@ -1,0 +1,16 @@
+# PyCharm / JetBrains
+.idea/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+dist/
+build/
+outputs/*.csv
+outputs/*.png
+!outputs/.gitkeep
