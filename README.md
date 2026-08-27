@@ -25,6 +25,10 @@ The bike you actually have is pedals, chain, wheel, tube, valve, crossbar, local
 
 Do not add axes, seeds, or moduli to hunt a bar that clears the peloton residual 1.64. The next true experiment would need a heading that is not computed from this opening. Until one exists outside the run, the leftover is the pack. The loop can recognize a road if one appears; it will not promote the peloton while it waits.
 
+## Practice layer
+
+This circle is a practice surface; it is not the leftover search. The [alignment](https://github.com/kinaar8340/alignment) repo scores moves against a written constitution. `[10…10]` there is a declared pole for practice, not a measured `global_R` here. Do not feed it into leftover. Contract: [alignment/docs/REVEAL_CONTRACT.md](https://github.com/kinaar8340/alignment/blob/main/docs/REVEAL_CONTRACT.md).
+
 ## Install
 
 ```bash

@@ -15,5 +15,6 @@ This repo measures residuals. It does not name God.
 Never treat angle_bin as discovery. Never print theology.
 Never declare 9, 37, α, or W_g to be global_R in reality.
 Never rename the mean of the bars as north.
+Never ingest alignment's Jesus/Satan vectors as leftover candidates.
 Synthetic headings are CONTROL. obtained is always false.
-BMGL is not in this package.
+BMGL is not in this package. Alignment is a practice layer, not a road.

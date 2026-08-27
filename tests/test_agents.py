@@ -19,6 +19,7 @@ REQUIRED = [
     "Never rename the mean of the bars as north.",
     "never promote a mirror to GLOBAL",
     "never refit the attractor from this opening",
+    "Never ingest alignment's Jesus/Satan vectors as leftover candidates.",
 ]
 
 
