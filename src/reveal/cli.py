@@ -16,6 +16,7 @@ from .header import (
     write_header_csv,
     write_header_trace,
 )
+from .leftover import run_leftover, write_leftover_csv
 from .names import (
     FULL_PERMUTATIONS,
     FULL_STEPS as NAMES_FULL_STEPS,
@@ -29,6 +30,7 @@ from .plots import (
     plot_header_burst_rms,
     plot_header_mean_theta,
     plot_header_phi_b,
+    plot_leftover_residuals,
     plot_names_exnmi,
 )
 
@@ -119,11 +121,33 @@ def cmd_names(ns: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_leftover(ns: argparse.Namespace) -> int:
+    steps, sites = _header_params(ns)
+    out = _out_dir(ns)
+    rows = run_leftover(steps=steps, seed=ns.seed, n_sites=sites)
+    write_leftover_csv(rows, out / "leftover.csv")
+    plot_leftover_residuals(rows, out / "leftover_residuals.png")
+    for row in rows:
+        tag = "PELOTON" if row.peloton else "probe"
+        print(
+            f"leftover candidate={row.candidate} {tag} "
+            f"residual_rms={row.residual_rms:.4f} "
+            f"beats_peloton={row.beats_peloton} "
+            f"survives_name_change={row.survives_name_change} "
+            f"lock_claimed={row.lock_claimed}"
+        )
+    print(f"wrote {out / 'leftover.csv'}")
+    return 0
+
+
 def cmd_all(ns: argparse.Namespace) -> int:
     rc = cmd_header(ns)
     if rc != 0:
         return rc
-    return cmd_names(ns)
+    rc = cmd_names(ns)
+    if rc != 0:
+        return rc
+    return cmd_leftover(ns)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -138,7 +162,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_names = sub.add_parser("names", help="9/π name-change null")
     _add_shared(p_names)
     p_names.set_defaults(func=cmd_names)
-    p_all = sub.add_parser("all", help="header then names")
+    p_leftover = sub.add_parser("leftover", help="local_pointer leftover-lock search")
+    _add_shared(p_leftover)
+    p_leftover.set_defaults(func=cmd_leftover)
+    p_all = sub.add_parser("all", help="header then names then leftover")
     _add_shared(p_all)
     p_all.set_defaults(func=cmd_all)
     return parser

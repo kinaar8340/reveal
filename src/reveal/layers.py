@@ -31,6 +31,8 @@ class LayerNames:
     global_R: str = "global_R"
     frame_R: str = "frame_R"
     residual_R: str = "residual_R"
+    local_pointer: str = "local_pointer"
+    peloton: str = "peloton"
 
 
 def residual_R(observed: np.ndarray, predicted: np.ndarray) -> float:

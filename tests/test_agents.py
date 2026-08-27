@@ -13,6 +13,9 @@ REQUIRED = [
     "angle_bin is CONTROL",
     "do not add moduli to chase a lock",
     "do not commit large videos",
+    "α and Θ̄ are peloton, not global_R",
+    "W_g is the valve, not heading",
+    "Never rename the mean of the bars as north.",
 ]
 
 

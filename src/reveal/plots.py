@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np
 
 from .header import HeaderRun
+from .leftover import LeftoverRow
 from .names import NameRow
 
 
@@ -121,6 +122,36 @@ def plot_names_exnmi(rows: list[NameRow], path: Path) -> Path:
     ax.set_title("exNMI by label method — angle_bin is CONTROL")
     ax.axhline(0.0, color="gray", linewidth=0.8)
     ax.set_xlim(-0.6, len(rows) - 0.4)
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+    return path
+
+
+def plot_leftover_residuals(rows: list[LeftoverRow], path: Path) -> Path:
+    """Residual RMS vs candidate. Peloton is hatched, never painted as north."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    labels = [r.candidate for r in rows]
+    values = [r.residual_rms for r in rows]
+    colors = ["#c44e52" if r.peloton else "#4c72b0" for r in rows]
+    fig, ax = plt.subplots(figsize=(8.2, 4.4))
+    bars = ax.bar(range(len(rows)), values, color=colors)
+    for bar, row in zip(bars, rows):
+        if row.peloton:
+            bar.set_hatch("//")
+            bar.set_edgecolor("black")
+    if rows:
+        ax.axhline(
+            rows[0].peloton_residual_rms,
+            color="gray",
+            linewidth=0.8,
+            label="peloton residual",
+        )
+    ax.set_xticks(range(len(rows)))
+    ax.set_xticklabels(labels, rotation=20, ha="right")
+    ax.set_ylabel("residual RMS (rad)")
+    ax.set_title("Leftover lock — peloton is PELOTON, not north")
+    ax.legend()
     fig.tight_layout()
     fig.savefig(path, dpi=140)
     plt.close(fig)

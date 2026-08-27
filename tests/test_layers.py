@@ -18,6 +18,8 @@ def test_layer_names_are_canonical():
     assert names.global_R == "global_R"
     assert names.frame_R == "frame_R"
     assert names.residual_R == "residual_R"
+    assert names.local_pointer == "local_pointer"
+    assert names.peloton == "peloton"
 
 
 def test_residual_rms():

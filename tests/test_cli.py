@@ -59,12 +59,35 @@ def test_names_cli_control_and_no_lock(tmp_path: Path, capsys):
     assert "EVIDENCE" not in out
 
 
+def test_leftover_cli_no_north_claim(tmp_path: Path, capsys):
+    rc = main(["leftover", "--steps", "4", "--seed", "0", "--out", str(tmp_path)])
+    assert rc == 0
+    csv_path = tmp_path / "leftover.csv"
+    assert csv_path.is_file()
+    with csv_path.open() as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 6
+    peloton = [r for r in rows if r["candidate"] == "peloton"][0]
+    assert peloton["peloton"] == "True"
+    assert peloton["lock_claimed"] == "False"
+    assert all(r["lock_claimed"] == "False" for r in rows)
+    assert (tmp_path / "leftover_residuals.png").is_file()
+    out = capsys.readouterr().out
+    for word in THEOLOGY:
+        assert word not in out
+    assert "LOCKED" not in out
+    assert "PELOTON" in out
+    assert "GLOBAL" not in out
+
+
 def test_all_writes_both(tmp_path: Path):
     rc = main(["all", "--steps", "48", "--seed", "0", "--out", str(tmp_path)])
     assert rc == 0
     assert (tmp_path / "header.csv").is_file()
     assert (tmp_path / "names.csv").is_file()
+    assert (tmp_path / "leftover.csv").is_file()
     assert (tmp_path / "header_burst_rms.png").is_file()
     assert (tmp_path / "header_phi_b.png").is_file()
     assert (tmp_path / "header_mean_theta.png").is_file()
     assert (tmp_path / "names_exnmi.png").is_file()
+    assert (tmp_path / "leftover_residuals.png").is_file()
