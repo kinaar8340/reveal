@@ -17,6 +17,8 @@ REQUIRED = [
     "α and Θ̄ are peloton, not global_R",
     "W_g is the valve, not heading",
     "Never rename the mean of the bars as north.",
+    "never promote a mirror to GLOBAL",
+    "never refit the attractor from this opening",
 ]
 
 

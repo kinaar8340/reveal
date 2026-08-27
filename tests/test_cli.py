@@ -80,6 +80,23 @@ def test_leftover_cli_no_north_claim(tmp_path: Path, capsys):
     assert "GLOBAL" not in out
 
 
+def test_mirror_cli_idle_no_file(tmp_path: Path, capsys):
+    rc = main(["mirror", "--steps", "4", "--seed", "0", "--out", str(tmp_path)])
+    assert rc == 0
+    with (tmp_path / "mirror.csv").open() as fh:
+        rows = list(csv.DictReader(fh))
+    assert len(rows) == 1
+    assert rows[0]["no_mirror"] == "True"
+    assert rows[0]["obtained"] == "False"
+    assert (tmp_path / "mirror_windows.csv").is_file()
+    assert (tmp_path / "mirror_residuals.png").is_file()
+    out = capsys.readouterr().out
+    for word in THEOLOGY:
+        assert word not in out
+    assert "LOCKED" not in out
+    assert "GLOBAL" not in out
+
+
 def test_all_writes_both(tmp_path: Path):
     rc = main(["all", "--steps", "48", "--seed", "0", "--out", str(tmp_path)])
     assert rc == 0

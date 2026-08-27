@@ -17,6 +17,7 @@ from .header import (
     write_header_trace,
 )
 from .leftover import run_leftover, write_leftover_csv
+from .mirror import run_mirror, write_mirror_csv, write_mirror_windows_csv
 from .names import (
     FULL_PERMUTATIONS,
     FULL_STEPS as NAMES_FULL_STEPS,
@@ -31,6 +32,7 @@ from .plots import (
     plot_header_mean_theta,
     plot_header_phi_b,
     plot_leftover_residuals,
+    plot_mirror_residuals,
     plot_names_exnmi,
 )
 
@@ -121,6 +123,28 @@ def cmd_names(ns: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_mirror(ns: argparse.Namespace) -> int:
+    steps, sites = _header_params(ns)
+    out = _out_dir(ns)
+    result = run_mirror(
+        steps=steps,
+        seed=ns.seed,
+        n_sites=sites,
+        attractor=ns.attractor,
+        synthetic=bool(ns.synthetic),
+    )
+    write_mirror_csv(result, out / "mirror.csv")
+    write_mirror_windows_csv(result, out / "mirror_windows.csv")
+    plot_mirror_residuals(result, out / "mirror_residuals.png")
+    event = result.event if result.event else ("idle" if result.no_mirror else "")
+    print(
+        f"mirror no_mirror={result.no_mirror} obtained={result.obtained} "
+        f"criteria_ver={result.criteria_ver} tag={result.tag} event={event}"
+    )
+    print(f"wrote {out / 'mirror.csv'}")
+    return 0
+
+
 def cmd_leftover(ns: argparse.Namespace) -> int:
     steps, sites = _header_params(ns)
     out = _out_dir(ns)
@@ -165,6 +189,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_leftover = sub.add_parser("leftover", help="local_pointer leftover-lock search")
     _add_shared(p_leftover)
     p_leftover.set_defaults(func=cmd_leftover)
+    p_mirror = sub.add_parser("mirror", help="external attractor windows (experiment D)")
+    _add_shared(p_mirror)
+    p_mirror.add_argument(
+        "--attractor",
+        type=Path,
+        default=None,
+        help="CSV of t,x,y,z unit vectors not produced by this process",
+    )
+    p_mirror.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="Independent-seed heading. SYNTHETIC_CONTROL, not discovery.",
+    )
+    p_mirror.set_defaults(func=cmd_mirror)
     p_all = sub.add_parser("all", help="header then names then leftover")
     _add_shared(p_all)
     p_all.set_defaults(func=cmd_all)

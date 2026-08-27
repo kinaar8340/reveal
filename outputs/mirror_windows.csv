@@ -1,0 +1,2 @@
+window_id,start,end,candidate,tag,residual_rms,peloton_rms,beats_peloton,chain_rotation,mirror,obtained,criteria_ver,no_mirror,event
+,,,no_external_input,INELIGIBLE,,,False,,False,False,v1,True,idle

@@ -12,6 +12,7 @@ import numpy as np
 
 from .header import HeaderRun
 from .leftover import LeftoverRow
+from .mirror import MirrorResult
 from .names import NameRow
 
 
@@ -152,6 +153,27 @@ def plot_leftover_residuals(rows: list[LeftoverRow], path: Path) -> Path:
     ax.set_ylabel("residual RMS (rad)")
     ax.set_title("Leftover lock — peloton is PELOTON, not north")
     ax.legend()
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+    return path
+
+
+def plot_mirror_residuals(result: MirrorResult, path: Path) -> Path:
+    """Window residual vs pack. Pack is hatched / baseline, never north."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(7.4, 4.2))
+    if result.residual_trace:
+        x = result.window_centers
+        ax.plot(x, result.residual_trace, label=result.candidate)
+        ax.plot(x, result.peloton_trace, linestyle="--", label="peloton residual")
+        ax.fill_between(x, result.peloton_trace, alpha=0.15, hatch="//", label="pack")
+        ax.legend()
+    else:
+        ax.text(0.5, 0.5, "no_mirror (idle)", ha="center", va="center", transform=ax.transAxes)
+    ax.set_xlabel("step")
+    ax.set_ylabel("residual RMS (rad)")
+    ax.set_title("Mirror windows — pack hatched, obtained=False")
     fig.tight_layout()
     fig.savefig(path, dpi=140)
     plt.close(fig)
