@@ -33,8 +33,12 @@ def test_header_metrics_present():
     for row in (headed, unheaded):
         assert row.burst_count >= 0
         assert np.isfinite(row.mean_Theta)
+        assert np.isfinite(row.mean_Theta_late)
         assert np.isfinite(row.rms_dTheta)
+        assert np.isfinite(row.rms_dTheta_late)
         assert np.isfinite(row.residual_R)
+        assert row.theta_crit > 0.0
+        assert row.burn_in_steps == 0  # tiny N keeps the whole window
         assert row.wg_lock is False
         assert row.phi_b_lock is False
         assert row.wg_target == pytest.approx(111.408)

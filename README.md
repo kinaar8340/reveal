@@ -43,9 +43,16 @@ python -m reveal names --steps N
 python -m reveal all
 ```
 
-`--full` lengthens the defaults. Tiny `N` is the test default.
+`--full` uses 96 lattice sites. Tiny `N` is the test default. Load on the opening needs thousands of steps, for example:
 
-Writes `outputs/header.csv`, `outputs/names.csv`, `outputs/header_burst_rms.png`, `outputs/header_phi_b.png` (pointer / `α` stability, not a `φ_b` lock claim), `outputs/names_exnmi.png`.
+```bash
+python -m reveal header --full --steps 5000 --seed 0
+python -m reveal names --steps 600
+```
+
+Writes `outputs/header.csv`, `outputs/header_trace.csv`, `outputs/names.csv`, `outputs/header_burst_rms.png`, `outputs/header_mean_theta.png`, `outputs/header_phi_b.png` (raw `α`, not a `φ_b` lock claim), `outputs/names_exnmi.png`.
+
+On a long header run, read four numbers, not the smoke-plot y-scale: `burst_count`, late `rms_dTheta` (after 20% burn-in), `mean_Theta` / `mean_Theta_late`, and `first_mean_pi` / `first_mean_tcrit` / `first_burst_step`. Empty crossing fields mean the series never reached that threshold.
 
 ## Tests
 

@@ -22,6 +22,12 @@ def test_header_cli_two_rows(tmp_path: Path, capsys):
     assert headed_flags == {"True", "False"}
     assert (tmp_path / "header_burst_rms.png").is_file()
     assert (tmp_path / "header_phi_b.png").is_file()
+    assert (tmp_path / "header_mean_theta.png").is_file()
+    assert (tmp_path / "header_trace.csv").is_file()
+    with csv_path.open() as fh:
+        fields = fh.readline().strip().split(",")
+    assert "rms_dTheta_late" in fields
+    assert "first_burst_step" in fields
     out = capsys.readouterr().out
     for word in THEOLOGY:
         assert word not in out
@@ -60,4 +66,5 @@ def test_all_writes_both(tmp_path: Path):
     assert (tmp_path / "names.csv").is_file()
     assert (tmp_path / "header_burst_rms.png").is_file()
     assert (tmp_path / "header_phi_b.png").is_file()
+    assert (tmp_path / "header_mean_theta.png").is_file()
     assert (tmp_path / "names_exnmi.png").is_file()

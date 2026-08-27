@@ -11,6 +11,3 @@ htmlcov/
 venv/
 dist/
 build/
-outputs/*.csv
-outputs/*.png
-!outputs/.gitkeep

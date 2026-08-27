@@ -38,6 +38,24 @@ class HeaderIdentityError(RuntimeError):
     """Headed and unheaded traces matched while the gauge path was supposed to be on."""
 
 
+def _opt_int(value: int | None) -> str:
+    return "" if value is None else str(value)
+
+
+def _first_at_or_above(series: list[float], threshold: float) -> int | None:
+    for i, value in enumerate(series):
+        if value >= threshold:
+            return i
+    return None
+
+
+def _burn_in_steps(n_steps: int) -> int:
+    """Drop the first 20% on long runs; keep the whole window when N is tiny."""
+    if n_steps < 20:
+        return 0
+    return max(1, n_steps // 5)
+
+
 @dataclass
 class HeaderRun:
     headed: bool
@@ -47,12 +65,19 @@ class HeaderRun:
     kappa: float
     omega_L: float
     omega_R: float
+    theta_crit: float
     burst_count: int
     mean_Theta: float
+    mean_Theta_late: float
     rms_dTheta: float
+    rms_dTheta_late: float
     residual_R: float
     mean_alpha: float
     pointer_rms: float
+    burn_in_steps: int
+    first_mean_pi: int | None
+    first_mean_tcrit: int | None
+    first_burst_step: int | None
     wg_target: float
     wg_lock: bool
     phi_b_target: float
@@ -61,6 +86,8 @@ class HeaderRun:
     pointer_history: list[float] = field(repr=False)
     mean_theta_history: list[float] = field(repr=False)
     alpha_history: list[float] = field(repr=False)
+    rms_history: list[float] = field(repr=False)
+    burst_history: list[int] = field(repr=False)
 
     def as_row(self) -> dict[str, object]:
         return {
@@ -71,12 +98,19 @@ class HeaderRun:
             "kappa": self.kappa,
             "omega_L": self.omega_L,
             "omega_R": self.omega_R,
+            "theta_crit": self.theta_crit,
             "burst_count": self.burst_count,
             "mean_Theta": self.mean_Theta,
+            "mean_Theta_late": self.mean_Theta_late,
             "rms_dTheta": self.rms_dTheta,
+            "rms_dTheta_late": self.rms_dTheta_late,
             "residual_R": self.residual_R,
             "mean_alpha": self.mean_alpha,
             "pointer_rms": self.pointer_rms,
+            "burn_in_steps": self.burn_in_steps,
+            "first_mean_pi": _opt_int(self.first_mean_pi),
+            "first_mean_tcrit": _opt_int(self.first_mean_tcrit),
+            "first_burst_step": _opt_int(self.first_burst_step),
             "wg_target": self.wg_target,
             "wg_lock": self.wg_lock,
             "phi_b_target": self.phi_b_target,
@@ -92,16 +126,33 @@ HEADER_CSV_FIELDS = [
     "kappa",
     "omega_L",
     "omega_R",
+    "theta_crit",
     "burst_count",
     "mean_Theta",
+    "mean_Theta_late",
     "rms_dTheta",
+    "rms_dTheta_late",
     "residual_R",
     "mean_alpha",
     "pointer_rms",
+    "burn_in_steps",
+    "first_mean_pi",
+    "first_mean_tcrit",
+    "first_burst_step",
     "wg_target",
     "wg_lock",
     "phi_b_target",
     "phi_b_lock",
+]
+
+TRACE_CSV_FIELDS = [
+    "step",
+    "headed_mean_Theta",
+    "unheaded_mean_Theta",
+    "headed_rms",
+    "unheaded_rms",
+    "headed_bursts",
+    "unheaded_bursts",
 ]
 
 
@@ -158,6 +209,7 @@ def run_header(
     mean_theta_history: list[float] = []
     alpha_history: list[float] = []
     spatial_rms: list[float] = []
+    burst_history: list[int] = []
 
     for _ in range(steps):
         # frame_R: two-gyro  q ← δL q δR†
@@ -180,6 +232,7 @@ def run_header(
         pred = np.array(twist, copy=True, dtype=float)
         q, twist, n_burst = _burst_reconnect(q, twist, t_crit)
         burst_count += n_burst
+        burst_history.append(n_burst)
         pred_chunks.append(pred)
         obs_chunks.append(np.array(twist, copy=True, dtype=float))
 
@@ -192,6 +245,9 @@ def run_header(
     residual = rms_residual(obs, pred)
     rms_dtheta = float(np.mean(spatial_rms)) if spatial_rms else 0.0
     pointer = np.asarray(pointer_history, dtype=float)
+    burn = _burn_in_steps(steps)
+    late_rms = spatial_rms[burn:] or spatial_rms
+    late_mean = mean_theta_history[burn:] or mean_theta_history
 
     return HeaderRun(
         headed=headed,
@@ -201,12 +257,19 @@ def run_header(
         kappa=float(cfg.kappa),
         omega_L=float(cfg.omega_L),
         omega_R=float(cfg.omega_R),
+        theta_crit=t_crit,
         burst_count=burst_count,
         mean_Theta=float(np.mean(mean_theta_history)),
+        mean_Theta_late=float(np.mean(late_mean)),
         rms_dTheta=rms_dtheta,
+        rms_dTheta_late=float(np.mean(late_rms)),
         residual_R=residual,
         mean_alpha=float(np.mean(alpha_history)),
         pointer_rms=float(np.sqrt(np.mean(pointer * pointer))) if pointer.size else 0.0,
+        burn_in_steps=burn,
+        first_mean_pi=_first_at_or_above(mean_theta_history, float(np.pi)),
+        first_mean_tcrit=_first_at_or_above(mean_theta_history, t_crit),
+        first_burst_step=_first_at_or_above([float(n) for n in burst_history], 1.0),
         wg_target=float(W_G_LOCK),
         wg_lock=False,
         phi_b_target=float(PHI_B_TARGET),
@@ -215,6 +278,8 @@ def run_header(
         pointer_history=pointer_history,
         mean_theta_history=mean_theta_history,
         alpha_history=alpha_history,
+        rms_history=spatial_rms,
+        burst_history=burst_history,
     )
 
 
@@ -258,4 +323,26 @@ def write_header_csv(rows: list[HeaderRun], path: Path) -> Path:
         writer.writeheader()
         for row in rows:
             writer.writerow(row.as_row())
+    return path
+
+
+def write_header_trace(headed: HeaderRun, unheaded: HeaderRun, path: Path) -> Path:
+    if headed.steps != unheaded.steps:
+        raise ValueError("trace requires equal step counts")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=TRACE_CSV_FIELDS)
+        writer.writeheader()
+        for i in range(headed.steps):
+            writer.writerow(
+                {
+                    "step": i,
+                    "headed_mean_Theta": headed.mean_theta_history[i],
+                    "unheaded_mean_Theta": unheaded.mean_theta_history[i],
+                    "headed_rms": headed.rms_history[i],
+                    "unheaded_rms": unheaded.rms_history[i],
+                    "headed_bursts": headed.burst_history[i],
+                    "unheaded_bursts": unheaded.burst_history[i],
+                }
+            )
     return path

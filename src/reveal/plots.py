@@ -1,4 +1,4 @@
-"""Three plots: burst/δΘ RMS, pointer-α stability, exNMI by label method."""
+"""Plots: burst/δΘ RMS, mean Θ, pointer α, exNMI by label method."""
 
 from __future__ import annotations
 
@@ -19,19 +19,64 @@ def plot_header_burst_rms(
     unheaded: HeaderRun,
     path: Path,
 ) -> Path:
+    """Two panels so burst counts do not hide the RMS scale."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    labels = ["burst_count", "rms_δΘ"]
-    headed_vals = [headed.burst_count, headed.rms_dTheta]
-    unheaded_vals = [unheaded.burst_count, unheaded.rms_dTheta]
-    x = np.arange(len(labels))
     width = 0.35
-    fig, ax = plt.subplots(figsize=(7.2, 4.2))
-    ax.bar(x - width / 2, headed_vals, width, label="headed")
-    ax.bar(x + width / 2, unheaded_vals, width, label="unheaded")
+    x = np.array([0.0, 1.0])
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 4.0))
+
+    ax = axes[0]
+    ax.bar(x[0] - width / 2, headed.burst_count, width, label="headed")
+    ax.bar(x[0] + width / 2, unheaded.burst_count, width, label="unheaded")
+    ax.set_xticks([0.0])
+    ax.set_xticklabels(["burst_count"])
+    ax.set_ylabel("count")
+    ax.set_title("Bursts")
+    ax.legend()
+
+    ax = axes[1]
+    ax.bar(
+        x - width / 2,
+        [headed.rms_dTheta, headed.rms_dTheta_late],
+        width,
+        label="headed",
+    )
+    ax.bar(
+        x + width / 2,
+        [unheaded.rms_dTheta, unheaded.rms_dTheta_late],
+        width,
+        label="unheaded",
+    )
     ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("value")
-    ax.set_title("Header ablation — burst count and δΘ RMS")
+    ax.set_xticklabels(["rms_δΘ", "rms_δΘ late"])
+    ax.set_ylabel("rad")
+    ax.set_title("δΘ RMS")
+    ax.legend()
+
+    fig.suptitle("Header ablation — burst count and δΘ RMS")
+    fig.tight_layout()
+    fig.savefig(path, dpi=140)
+    plt.close(fig)
+    return path
+
+
+def plot_header_mean_theta(
+    headed: HeaderRun,
+    unheaded: HeaderRun,
+    path: Path,
+) -> Path:
+    """Spatial-mean Θ vs step. The hold-down question lives here, not on tanh(6α)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    ax.plot(headed.mean_theta_history, label="headed")
+    ax.plot(unheaded.mean_theta_history, label="unheaded", linestyle="--")
+    ax.axhline(np.pi, color="gray", linewidth=0.8, label="π")
+    ax.axhline(headed.theta_crit, color="black", linewidth=0.8, linestyle=":", label="θ_crit")
+    if headed.burn_in_steps:
+        ax.axvline(headed.burn_in_steps, color="0.6", linewidth=0.8, linestyle="--")
+    ax.set_xlabel("step")
+    ax.set_ylabel("mean Θ (rad)")
+    ax.set_title("Header ablation — mean Θ")
     ax.legend()
     fig.tight_layout()
     fig.savefig(path, dpi=140)
@@ -44,14 +89,14 @@ def plot_header_phi_b(
     unheaded: HeaderRun,
     path: Path,
 ) -> Path:
-    """Pointer α stability. Not a φ_b lock claim."""
+    """Raw α, not tanh(6α). Saturated tanh is not a φ_b lock claim."""
     path.parent.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(7.2, 4.2))
-    ax.plot(headed.pointer_history, label="headed pointer")
-    ax.plot(unheaded.pointer_history, label="unheaded pointer", linestyle="--")
+    ax.plot(headed.alpha_history, label="headed α")
+    ax.plot(unheaded.alpha_history, label="unheaded α", linestyle="--")
     ax.set_xlabel("step")
-    ax.set_ylabel("tanh(α · 6)")
-    ax.set_title("Pointer / α stability (not a φ_b lock claim)")
+    ax.set_ylabel("α")
+    ax.set_title("Pointer / α (not a φ_b lock claim)")
     ax.legend()
     fig.tight_layout()
     fig.savefig(path, dpi=140)

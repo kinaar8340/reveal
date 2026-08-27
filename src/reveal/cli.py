@@ -14,6 +14,7 @@ from .header import (
     TINY_STEPS as HEADER_TINY_STEPS,
     run_ablation,
     write_header_csv,
+    write_header_trace,
 )
 from .names import (
     FULL_PERMUTATIONS,
@@ -24,7 +25,12 @@ from .names import (
     write_names_csv,
 )
 from .paths import default_outputs
-from .plots import plot_header_burst_rms, plot_header_phi_b, plot_names_exnmi
+from .plots import (
+    plot_header_burst_rms,
+    plot_header_mean_theta,
+    plot_header_phi_b,
+    plot_names_exnmi,
+)
 
 
 def _add_shared(parser: argparse.ArgumentParser) -> None:
@@ -74,14 +80,24 @@ def cmd_header(ns: argparse.Namespace) -> int:
         print(f"header job failed: {exc}", file=sys.stderr)
         return 1
     write_header_csv([headed, unheaded], out / "header.csv")
+    write_header_trace(headed, unheaded, out / "header_trace.csv")
     plot_header_burst_rms(headed, unheaded, out / "header_burst_rms.png")
+    plot_header_mean_theta(headed, unheaded, out / "header_mean_theta.png")
     plot_header_phi_b(headed, unheaded, out / "header_phi_b.png")
-    print(
-        f"header rows=2 headed_bursts={headed.burst_count} "
-        f"unheaded_bursts={unheaded.burst_count} "
-        f"headed_rms_dTheta={headed.rms_dTheta:.4f} "
-        f"unheaded_rms_dTheta={unheaded.rms_dTheta:.4f}"
-    )
+    for arm in (headed, unheaded):
+        tag = "headed" if arm.headed else "unheaded"
+        first_pi = "" if arm.first_mean_pi is None else arm.first_mean_pi
+        first_tcrit = "" if arm.first_mean_tcrit is None else arm.first_mean_tcrit
+        first_burst = "" if arm.first_burst_step is None else arm.first_burst_step
+        print(
+            f"header {tag} bursts={arm.burst_count} "
+            f"first_burst={first_burst} "
+            f"mean_Theta={arm.mean_Theta:.4f} "
+            f"mean_Theta_late={arm.mean_Theta_late:.4f} "
+            f"rms_dTheta={arm.rms_dTheta:.4f} "
+            f"rms_dTheta_late={arm.rms_dTheta_late:.4f} "
+            f"first_pi={first_pi} first_tcrit={first_tcrit}"
+        )
     print(f"wrote {out / 'header.csv'}")
     return 0
 
