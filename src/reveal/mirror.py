@@ -169,11 +169,21 @@ def idle_result(*, steps: int = 0, seed: int = 0, n_sites: int = 0) -> MirrorRes
     )
 
 
+class AttractorNotFound(FileNotFoundError):
+    """--attractor path does not exist. Omit the flag for idle no_mirror."""
+
+
 def load_attractor_csv(path: Path) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """Load t,x,y,z unit-vector series not produced by this process."""
+    path = Path(path)
+    if not path.is_file():
+        raise AttractorNotFound(
+            f"attractor not found: {path}. "
+            "Pass a CSV with columns t,x,y,z, or omit --attractor for no_mirror idle."
+        )
     times: list[float] = []
     vecs: list[list[float]] = []
-    with Path(path).open() as fh:
+    with path.open() as fh:
         reader = csv.DictReader(fh)
         if reader.fieldnames is None:
             raise ValueError("attractor csv needs a header t,x,y,z")

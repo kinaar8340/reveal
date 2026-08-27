@@ -17,7 +17,7 @@ from .header import (
     write_header_trace,
 )
 from .leftover import run_leftover, write_leftover_csv
-from .mirror import run_mirror, write_mirror_csv, write_mirror_windows_csv
+from .mirror import AttractorNotFound, run_mirror, write_mirror_csv, write_mirror_windows_csv
 from .names import (
     FULL_PERMUTATIONS,
     FULL_STEPS as NAMES_FULL_STEPS,
@@ -126,13 +126,20 @@ def cmd_names(ns: argparse.Namespace) -> int:
 def cmd_mirror(ns: argparse.Namespace) -> int:
     steps, sites = _header_params(ns)
     out = _out_dir(ns)
-    result = run_mirror(
-        steps=steps,
-        seed=ns.seed,
-        n_sites=sites,
-        attractor=ns.attractor,
-        synthetic=bool(ns.synthetic),
-    )
+    try:
+        result = run_mirror(
+            steps=steps,
+            seed=ns.seed,
+            n_sites=sites,
+            attractor=ns.attractor,
+            synthetic=bool(ns.synthetic),
+        )
+    except AttractorNotFound as exc:
+        print(f"mirror: {exc}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError) as exc:
+        print(f"mirror: cannot read attractor: {exc}", file=sys.stderr)
+        return 2
     write_mirror_csv(result, out / "mirror.csv")
     write_mirror_windows_csv(result, out / "mirror_windows.csv")
     plot_mirror_residuals(result, out / "mirror_residuals.png")

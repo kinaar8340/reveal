@@ -15,13 +15,21 @@ from reveal.criteria import (
     classify_tag,
     criteria_v1,
 )
-from reveal.mirror import run_mirror
+from reveal.mirror import load_attractor_csv, run_mirror
 
 
 def _aligned(steps: int, n_sites: int, axis: list[float]) -> np.ndarray:
     vec = np.array(axis, dtype=float)
     vec = vec / np.linalg.norm(vec)
     return np.broadcast_to(vec, (steps, n_sites, 3)).copy()
+
+
+def test_example_heading_csv_loads():
+    path = Path(__file__).resolve().parents[1] / "examples" / "heading.csv"
+    times, vecs = load_attractor_csv(path)
+    assert times.shape[0] >= 1
+    assert vecs.shape[1] == 3
+    np.testing.assert_allclose(np.linalg.norm(vecs, axis=1), 1.0, atol=1e-12)
 
 
 def test_no_file_is_idle_no_mirror():

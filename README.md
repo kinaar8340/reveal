@@ -45,7 +45,7 @@ pip install -e ".[dev]"
 
 **C — leftover lock (failed search for a road).** Unheaded lattice. `local_pointer_i = R(q_i) ê_x`. Peloton = mean of those pointers (and `peloton_alpha` from this run’s `Θ̄`). Allowed independent candidates: lab `x,y,z` and the peloton of a different seed. A lock is claimed only if an independent candidate’s residual RMS is strictly smaller than the peloton residual and the heading does not rotate when the chain is swapped (mod 9 vs 37 paint). The peloton is tagged PELOTON, never GLOBAL. Seed 0, 5000 steps, 96 sites: peloton residual 1.640 rad, the best of a bad lot, and it still does not beat itself. Lab x/y/z 1.823 / 1.726 / 1.672; other-seed peloton 1.772; `peloton_alpha` 1.838. Nothing independent beats the pack. Chain paint resultants are 0.021 and 0.045 (noise); swapping 9 vs 37 rotates the painted heading by 0.81 rad — a name change, not north. `lock_claimed=False` on every row.
 
-**D — mirror / attractor loop (idle unless something off-opening appears).** Windowed gate using C’s bar. A pass is a mirror interval, not north. `obtained` is always false. v1 is C’s tests; after a pass, v2 requires the same candidate to pass the next window with no refit. If v2 fails, write `mirror_ended` and stop promoting that candidate. Peloton, `α`, `Θ̄`, `W_g`, and lab axes fitted from this `q` are INELIGIBLE. File headings are EXTERNAL. Synthetic headings (independent seed) are SYNTHETIC_CONTROL, never discovery. Default with no `--attractor` is `no_mirror`. Do not add moduli, axes, or a kinder RMS. Do not roll criteria backward in the same run.
+**D — mirror / attractor loop (idle unless something off-opening appears).** Windowed gate using C’s bar. A pass is a mirror interval, not north. `obtained` is always false. v1 is C’s tests; after a pass, v2 requires the same candidate to pass the next window with no refit. If v2 fails, write `mirror_ended` and stop promoting that candidate. Peloton, `α`, `Θ̄`, `W_g`, and lab axes fitted from this `q` are INELIGIBLE. File headings are EXTERNAL. Synthetic headings (independent seed) are SYNTHETIC_CONTROL, never discovery. Default with no `--attractor` is `no_mirror`. `examples/heading.csv` is a sample off-opening series so the flag has a real path; it is not a discovered road. A missing path is an error, not idle. Do not add moduli, axes, or a kinder RMS. Do not roll criteria backward in the same run.
 
 ## CLI
 
@@ -54,7 +54,7 @@ python -m reveal header --steps N --seed S
 python -m reveal names --steps N
 python -m reveal leftover --steps N --seed S
 python -m reveal mirror --full --steps 5000 --seed 0
-python -m reveal mirror --attractor path/to/heading.csv
+python -m reveal mirror --attractor examples/heading.csv
 python -m reveal all
 ```
 

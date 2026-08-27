@@ -80,6 +80,27 @@ def test_leftover_cli_no_north_claim(tmp_path: Path, capsys):
     assert "GLOBAL" not in out
 
 
+def test_mirror_cli_missing_attractor_is_not_a_traceback(tmp_path: Path, capsys):
+    rc = main(
+        [
+            "mirror",
+            "--steps",
+            "4",
+            "--seed",
+            "0",
+            "--out",
+            str(tmp_path),
+            "--attractor",
+            "path/to/heading.csv",
+        ]
+    )
+    assert rc == 2
+    err = capsys.readouterr().err
+    assert "attractor not found" in err
+    assert "no_mirror" in err
+    assert "Traceback" not in err
+
+
 def test_mirror_cli_idle_no_file(tmp_path: Path, capsys):
     rc = main(["mirror", "--steps", "4", "--seed", "0", "--out", str(tmp_path)])
     assert rc == 0
